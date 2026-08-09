@@ -1088,7 +1088,7 @@
     let editingItem = null;
     let currentCheckItem = null;
 
-    // ===== 全局核心：取得當前畫面的物件 (自動判定是主畫面還是特寫內層) =====
+    // ===== 全局核心：取得當前畫面的物件 =====
     function getActiveContext() {
       if (subSceneStack.length > 0) {
         const activeSub = subSceneStack[subSceneStack.length - 1];
@@ -1136,21 +1136,23 @@
         });
     }
 
-    // 依照車號載入獨立的排版配置
+    // 依照車號載入獨立的排版配置 (使用車號前綴避免觸發權限錯誤)
     async function loadSceneLayoutsFromFirestore(vehicle) {
-      const collectionName = `v${vehicle}_layouts`;
       try {
-        const querySnapshot = await getDocs(collection(db, collectionName));
+        const querySnapshot = await getDocs(collection(db, "passport_layouts"));
         if (!querySnapshot.empty) {
+          const prefix = `${vehicle}_`;
           querySnapshot.forEach((docSnap) => {
-            const sceneName = docSnap.id;
-            const data = docSnap.data();
-            const sceneIdx = checklistData.findIndex(s => s.sceneName === sceneName);
-            if (sceneIdx !== -1) {
-              if (data.items) checklistData[sceneIdx].items = data.items;
-              if (data.imageUrl) checklistData[sceneIdx].imageUrl = data.imageUrl; 
-              if (data.historyImages && Array.isArray(data.historyImages)) {
-                checklistData[sceneIdx].historyImages = data.historyImages;
+            if (docSnap.id.startsWith(prefix)) {
+              const sceneName = docSnap.id.slice(prefix.length);
+              const data = docSnap.data();
+              const sceneIdx = checklistData.findIndex(s => s.sceneName === sceneName);
+              if (sceneIdx !== -1) {
+                if (data.items) checklistData[sceneIdx].items = data.items;
+                if (data.imageUrl) checklistData[sceneIdx].imageUrl = data.imageUrl; 
+                if (data.historyImages && Array.isArray(data.historyImages)) {
+                  checklistData[sceneIdx].historyImages = data.historyImages;
+                }
               }
             }
           });
@@ -1160,23 +1162,29 @@
       }
     }
 
-    // 依照車號載入獨立的點檢項目清單
+    // 依照車號載入獨立的點檢項目清單 (使用車號前綴避免觸發權限錯誤)
     async function loadChecklistConfigFromFirestore(vehicle) {
-      const collectionName = `v${vehicle}_config`;
       try {
-        const querySnapshot = await getDocs(collection(db, collectionName));
+        const querySnapshot = await getDocs(collection(db, "passport_config"));
         let config = {};
+        const prefix = `${vehicle}_`;
 
-        if (querySnapshot.empty) {
+        if (!querySnapshot.empty) {
+          querySnapshot.forEach((docSnap) => {
+            if (docSnap.id.startsWith(prefix)) {
+              const zoneId = docSnap.id.slice(prefix.length);
+              config[zoneId] = docSnap.data().items;
+            }
+          });
+        }
+
+        // 如果該車輛沒有自訂設定，初始化該車輛的預設資料
+        if (Object.keys(config).length === 0) {
           document.getElementById('loading-text').innerText = `初始化 ${vehicle} 車清單寫入資料庫...`;
           for (const [zoneId, items] of Object.entries(defaultFirestoreConfig)) {
-            await setDoc(doc(db, collectionName, zoneId), { items: items });
+            await setDoc(doc(db, "passport_config", `${prefix}${zoneId}`), { items: items });
             config[zoneId] = items;
           }
-        } else {
-          querySnapshot.forEach((doc) => {
-            config[doc.id] = doc.data().items;
-          });
         }
         return config;
       } catch (err) {
@@ -1275,7 +1283,7 @@
           }
         }
 
-        // 每次重新登入時重置點班模板，防止前一台車的修改滲透
+        // 每次重新登入時重置點班模板
         checklistData = getInitialChecklistDataTemplate();
         currentSceneIdx = 0;
         subSceneStack = [];
@@ -1610,7 +1618,7 @@
     // ===== 儲存當前場景至對應車號的雲端資料庫 =====
     async function saveCurrentSceneLayout() {
       const scene = checklistData[currentSceneIdx];
-      const collectionName = `v${currentVehicle}_layouts`;
+      const docId = `${currentVehicle}_${scene.sceneName}`;
       
       function cleanItems(items) {
         return items.map(item => {
@@ -1636,7 +1644,7 @@
       const itemsToSave = cleanItems(scene.items);
 
       try {
-        await setDoc(doc(db, collectionName, scene.sceneName), {
+        await setDoc(doc(db, "passport_layouts", docId), {
           imageUrl: scene.imageUrl, 
           historyImages: scene.historyImages || [scene.imageUrl],
           items: itemsToSave
@@ -1975,7 +1983,7 @@
         currentCheckItem.subItems[subIdx].imgUrl = downloadUrl;
 
         if (currentCheckItem.zoneId) {
-          await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
+          await setDoc(doc(db, "passport_config", `${currentVehicle}_${currentCheckItem.zoneId}`), {
             items: currentCheckItem.subItems
           });
         }
@@ -2000,7 +2008,7 @@
           delete sub.imgUrl;
 
           if (currentCheckItem.zoneId) {
-            await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
+            await setDoc(doc(db, "passport_config", `${currentVehicle}_${currentCheckItem.zoneId}`), {
               items: currentCheckItem.subItems
             });
           }
@@ -2022,7 +2030,7 @@
       
       if (currentCheckItem.zoneId) {
         try {
-          await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
+          await setDoc(doc(db, "passport_config", `${currentVehicle}_${currentCheckItem.zoneId}`), {
             items: currentCheckItem.subItems
           });
           console.log(`[${currentVehicle}車] 同步成功: [${field}] 已更正為 ${value}`);
@@ -2062,7 +2070,7 @@
 
         if (currentCheckItem.zoneId) {
           try {
-            await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
+            await setDoc(doc(db, "passport_config", `${currentVehicle}_${currentCheckItem.zoneId}`), {
               items: currentCheckItem.subItems
             });
           } catch (err) {
@@ -2084,7 +2092,7 @@
 
         if (currentCheckItem.zoneId) {
           try {
-            await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
+            await setDoc(doc(db, "passport_config", `${currentVehicle}_${currentCheckItem.zoneId}`), {
               items: currentCheckItem.subItems
             });
           } catch (err) {
