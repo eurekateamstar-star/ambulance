@@ -487,7 +487,7 @@
       box-shadow: 0 25px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center;
     }
     
-    select[id="inspector-name"] { 
+    select[id="vehicle-id"], select[id="inspector-name"] { 
       background: rgba(255,255,255,0.1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 15px center;
       background-size: 20px;
       border: 1px solid rgba(255,255,255,0.2); 
@@ -496,18 +496,18 @@
       width: 100%; 
       text-align: left; 
       text-align-last: left; 
-      outline: none; margin-bottom: 20px; 
+      outline: none; margin-bottom: 15px; 
       box-sizing: border-box; transition: 0.3s;
       cursor: pointer;
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
     }
-    select[id="inspector-name"]:focus { 
+    select[id="vehicle-id"]:focus, select[id="inspector-name"]:focus { 
       background-color: rgba(255,255,255,0.15); 
       border-color: var(--apple-blue); 
     }
-    select[id="inspector-name"] option {
+    select[id="vehicle-id"] option, select[id="inspector-name"] option {
       background-color: #1c1c1e;
       color: white;
     }
@@ -515,6 +515,7 @@
     .start-btn { 
       background: var(--apple-blue); color: white; border: none; padding: 15px 0; width: 100%; border-radius: 12px; 
       font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); cursor: pointer;
+      margin-top: 5px;
     }
     .start-btn:active { transform: scale(0.98); }
     .start-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
@@ -718,8 +719,14 @@
     </div>
     <div class="login-card">
       <h2 style="margin: 0 0 10px 0; font-size: 24px;">救護車點班系統</h2>
-      <div style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 30px; letter-spacing: 1.5px; font-weight: 600;">AMBULANCE CHECKLIST</div>
+      <div style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 25px; letter-spacing: 1.5px; font-weight: 600;">AMBULANCE CHECKLIST</div>
       
+      <!-- 車號選擇選單 -->
+      <select id="vehicle-id">
+        <option value="91" selected>🚑 91 車</option>
+        <option value="92">🚑 92 車</option>
+      </select>
+
       <select id="inspector-name">
         <option value="" disabled selected hidden>請選擇檢查人員姓名</option>
         <option value="陳政龍">陳政龍</option>
@@ -936,140 +943,145 @@
       "右側外-椅式擔架": [{ name: "椅式擔架", qty: "1", unit: "台", checked: false }]
     };
 
-    // ===== 系統點檢邏輯資料 =====
-    let checklistData = [
-      {
-        sceneName: "車尾檢查",
-        imageUrl: "https://i.postimg.cc/4yvYN53c/S-181854248-0.jpg",
-        historyImages: ["https://i.postimg.cc/4yvYN53c/S-181854248-0.jpg"],
-        items: [
-          { zoneId: "車尾-LUCAS", label: "LUCAS", top: 50, left: 10, width: 17, height: 12, checked: false, subItems: [] },
-          { zoneId: "車尾-長背板", label: "長背板", top: 80, left: 20, width: 32, height: 6, checked: false, subItems: [] },
-          { zoneId: "車尾-頭部", label: "頭部固定", top: 65, left: 10, width: 6, height: 20, checked: false, subItems: [] },
-          { zoneId: "車尾-大氧", label: "大氧氣瓶", top: 65, left: 74, width: 15, height: 18, checked: false, subItems: [] },
-          { zoneId: "車尾-抽吸護木", label: "抽吸式護木", top: 50, left: 28, width: 8, height: 8, checked: false, subItems: [] },
-          { zoneId: "車尾-頸圈", label: "頸圈", top: 44, left: 78, width: 15, height: 10, checked: false, subItems: [] }
-        ]
-      },
-      {
-        sceneName: "左側裝備區 (1)",
-        imageUrl: "https://i.postimg.cc/W1ds58vT/S-181854241-0.jpg",
-        historyImages: ["https://i.postimg.cc/W1ds58vT/S-181854241-0.jpg"],
-        items: [
-          { zoneId: "左側1-繃帶", label: "彈性繃帶", top: 26, left: 2, width: 12, height: 8, checked: false, subItems: [] },
-          { zoneId: "左側1-紗布", label: "紗布", top: 26, left: 16, width: 12, height: 8, checked: false, subItems: [] },
-          { zoneId: "左側1-空針", label: "3.5.10cc空針", top: 26, left: 30, width: 13, height: 8, checked: false, subItems: [] },
-          { zoneId: "左側1-IV針", label: "IV注射針", top: 26, left: 45, width: 15, height: 8, checked: false, subItems: [] },
-          { zoneId: "左側1-輸液", label: "輸液組", top: 25, left: 64, width: 35, height: 16, checked: false, subItems: [] },
-          { zoneId: "左側1-12導", label: "12導貼片", top: 43, left: 64, width: 16, height: 7, checked: false, subItems: [] },
-          { zoneId: "左側1-鼻管", label: "氧氣鼻管", top: 43, left: 82, width: 16, height: 7, checked: false, subItems: [] },
-          { zoneId: "左側1-驅血帶", label: "驅血帶", top: 51, left: 64, width: 34, height: 7, checked: false, subItems: [] },
-          { 
-            label: "外科包", top: 70, left: 4, width: 32, height: 25, 
-            isSubScene: true, 
-            subSceneTitle: "外科包 (外層)",
-            subSceneImage: "https://i.postimg.cc/FHt9G01N/wei-ming-ming-2.jpg", 
-            historyImages: ["https://i.postimg.cc/FHt9G01N/wei-ming-ming-2.jpg"],
-            subSceneItems: [
-               { zoneId: "外科包-SAM", label: "SAM護木", top: 33, left: 28, width: 55, height: 22, checked: false, subItems: [] },
-               { zoneId: "外科包-食鹽水", label: "食鹽水", top: 33, left: 10, width: 14, height: 22, checked: false, subItems: [] },
-               { 
-                 label: "打開內層", top: 58, left: 28, width: 55, height: 30,
-                 isSubScene: true,
-                 subSceneTitle: "外科包 (內層)",
-                 subSceneImage: "https://i.postimg.cc/Cxjw2dfJ/wei-ming-ming-23.jpg", 
-                 historyImages: ["https://i.postimg.cc/Cxjw2dfJ/wei-ming-ming-23.jpg"],
-                 subSceneItems: [
-                    { zoneId: "外科包-內部耗材1", label: "手套", top: 45, left: 20, width: 55, height: 10, checked: false, subItems: [] }, 
-                    { zoneId: "外科包-內部耗材2", label: "3X3", top: 58, left: 20, width: 55, height: 10, checked: false, subItems: [] },
-                    { zoneId: "外科包-內部耗材4", label: "止血帶", top: 54, left: 78, width: 15, height: 15, checked: false, subItems: [] },
-                    { zoneId: "外科包-內部耗材3", label: "5X8", top: 75, left: 20, width: 55, height: 10, checked: false, subItems: [] }
-                 ]
-               }
-            ]
-          },
-          { 
-            label: "內科包 ", top: 70, left: 45, width: 55, height: 30, 
-            isSubScene: true, 
-            subSceneTitle: "內科包目錄", 
-            subSceneImage: "https://i.postimg.cc/L5sSYXJN/S-181854240-0.jpg",
-            historyImages: ["https://i.postimg.cc/L5sSYXJN/S-181854240-0.jpg"],
-            subSceneItems: [
-               { zoneId: "內科包-右袋", label: "右袋 (檢查)", top: 40, left: 78, width: 18, height: 40, checked: false, subItems: [] },
-               { 
-                 label: "左袋打開", top: 40, left: 8, width: 18, height: 40,
-                 isSubScene: true,
-                 subSceneTitle: "內科包-左袋",
-                 subSceneImage: "https://i.postimg.cc/prvwzdyf/S-181854230-0.jpg",
-                 historyImages: ["https://i.postimg.cc/prvwzdyf/S-181854230-0.jpg"],
-                 subSceneItems: [
-                   { zoneId: "內科包-左袋1", label: "IVset", top: 20, left: 20, width: 70, height:40, checked: false, subItems: [] },
-                   { zoneId: "內科包-左袋2", label: "N/S", top: 63, left: 20, width: 70, height: 40, checked: false, subItems: [] }
-                 ]
-               },
-               { 
-                 label: "主袋打開", top: 30, left: 26, width: 50, height: 30,
-                 isSubScene: true,
-                 subSceneTitle: "內科包-主袋",
-                 subSceneImage: "https://i.postimg.cc/zGNyvwJT/S-181854236-0.jpg",
-                 historyImages: ["https://i.postimg.cc/zGNyvwJT/S-181854236-0.jpg"],
-                 subSceneItems: [
-                   { zoneId: "內科包-主袋1", label: "BVM/LMA", top: 20, left: 20, width: 65, height: 40, checked: false, subItems: [] },
-                   { zoneId: "內科包-主袋2", label: "氧氣導管", top: 62, left: 20, width: 65, height: 30, checked: false, subItems: [] }
-                 ]
-               },
-               { 
-                 label: "前袋打開", top: 62, left: 26, width: 50, height: 30,
-                 isSubScene: true,
-                 subSceneTitle: "內科包-前袋",
-                 subSceneImage: "https://i.postimg.cc/mgk0QJ2Z/S-181854235-0.jpg",
-                 historyImages: ["https://i.postimg.cc/mgk0QJ2Z/S-181854235-0.jpg"],
-                 subSceneItems: [
-                   { zoneId: "內科包-前袋1", label: "小兒面罩", top: 40, left: 20, width: 65, height: 20, checked: false, subItems: [] },
-                   { zoneId: "內科包-前袋2", label: "進階呼吸道", top: 63, left: 20, width: 65, height: 30, checked: false, subItems: [] }
-                 ]
-               }
-            ]
-          } 
-        ]
-      },
-      {
-        sceneName: "左側裝備區 (2)",
-        imageUrl: "https://i.postimg.cc/XJb370BD/S-181854242-0.jpg",
-        historyImages: ["https://i.postimg.cc/XJb370BD/S-181854242-0.jpg"],
-        items: [
-           { zoneId: "左側2-ZOLL", label: "ZOLL X", top: 32, left: 8, width: 40, height: 20, checked: false, subItems: [] },
-           { zoneId: "左側2-血糖包", label: "血糖包", top: 39, left: 40, width: 8, height: 12, checked: false, subItems: [] },
-           { zoneId: "左側2-手套箱", label: "約束帶", top: 17, left: 8, width: 40, height: 12, checked: false, subItems: [] },
-           { zoneId: "左側2-藥包", label: "藥包/插管包", top: 53, left: 8, width: 40, height: 12, checked: false, subItems: [] },
-           { zoneId: "左側2-潮氣瓶", label: "潮氣瓶", top: 18, left: 55, width: 15, height: 18, checked: false, subItems: [] },
-           { zoneId: "左側2-產包", label: "產包/燙傷包", top: 60, left: 53, width: 26, height: 18, checked: false, subItems: [] }
-        ]
-      },
-      {
-        sceneName: "右側座位區",
-        imageUrl: "https://i.postimg.cc/1z02BVft/S-181862404.jpg",
-        historyImages: ["https://i.postimg.cc/1z02BVft/S-181862404.jpg"],
-        items: [
-           { zoneId: "右側座-KED", label: "KED", top: 13, left: 23, width: 27, height: 12, checked: false, subItems: [] },
-           { zoneId: "右側座-骨盆", label: "骨盆固定帶", top: 13, left: 57, width: 13, height: 12, checked: false, subItems: [] },
-           { zoneId: "右側座-頸圈", label: "頸圈(備用)", top: 13, left: 75, width: 20, height: 12, checked: false, subItems: [] }
-        ]
-      },
-      {
-        sceneName: "右側車外",
-        imageUrl: "https://i.postimg.cc/hPJYw5fJ/S-181854227-0.jpg",
-        historyImages: ["https://i.postimg.cc/hPJYw5fJ/S-181854227-0.jpg"],
-        items: [
-           { zoneId: "右側外-搬運毯", label: "搬運毯", top: 15, left: 70, width: 22, height: 8, checked: false, subItems: [] },
-           { zoneId: "右側座-床單", label: "拋棄式床單", top: 60, left: 35, width: 24, height: 15, checked: false, subItems: [] },
-           { zoneId: "右側外-椅式擔架", label: "椅式擔架", top: 30, left: 70, width: 22, height: 62, checked: false, subItems: [] }
-        ]
-      }
-    ];
+    // ===== 取得預設點檢範本 =====
+    function getInitialChecklistDataTemplate() {
+      return [
+        {
+          sceneName: "車尾檢查",
+          imageUrl: "https://i.postimg.cc/4yvYN53c/S-181854248-0.jpg",
+          historyImages: ["https://i.postimg.cc/4yvYN53c/S-181854248-0.jpg"],
+          items: [
+            { zoneId: "車尾-LUCAS", label: "LUCAS", top: 50, left: 10, width: 17, height: 12, checked: false, subItems: [] },
+            { zoneId: "車尾-長背板", label: "長背板", top: 80, left: 20, width: 32, height: 6, checked: false, subItems: [] },
+            { zoneId: "車尾-頭部", label: "頭部固定", top: 65, left: 10, width: 6, height: 20, checked: false, subItems: [] },
+            { zoneId: "車尾-大氧", label: "大氧氣瓶", top: 65, left: 74, width: 15, height: 18, checked: false, subItems: [] },
+            { zoneId: "車尾-抽吸護木", label: "抽吸式護木", top: 50, left: 28, width: 8, height: 8, checked: false, subItems: [] },
+            { zoneId: "車尾-頸圈", label: "頸圈", top: 44, left: 78, width: 15, height: 10, checked: false, subItems: [] }
+          ]
+        },
+        {
+          sceneName: "左側裝備區 (1)",
+          imageUrl: "https://i.postimg.cc/W1ds58vT/S-181854241-0.jpg",
+          historyImages: ["https://i.postimg.cc/W1ds58vT/S-181854241-0.jpg"],
+          items: [
+            { zoneId: "左側1-繃帶", label: "彈性繃帶", top: 26, left: 2, width: 12, height: 8, checked: false, subItems: [] },
+            { zoneId: "左側1-紗布", label: "紗布", top: 26, left: 16, width: 12, height: 8, checked: false, subItems: [] },
+            { zoneId: "左側1-空針", label: "3.5.10cc空針", top: 26, left: 30, width: 13, height: 8, checked: false, subItems: [] },
+            { zoneId: "左側1-IV針", label: "IV注射針", top: 26, left: 45, width: 15, height: 8, checked: false, subItems: [] },
+            { zoneId: "左側1-輸液", label: "輸液組", top: 25, left: 64, width: 35, height: 16, checked: false, subItems: [] },
+            { zoneId: "左側1-12導", label: "12導貼片", top: 43, left: 64, width: 16, height: 7, checked: false, subItems: [] },
+            { zoneId: "左側1-鼻管", label: "氧氣鼻管", top: 43, left: 82, width: 16, height: 7, checked: false, subItems: [] },
+            { zoneId: "左側1-驅血帶", label: "驅血帶", top: 51, left: 64, width: 34, height: 7, checked: false, subItems: [] },
+            { 
+              label: "外科包", top: 70, left: 4, width: 32, height: 25, 
+              isSubScene: true, 
+              subSceneTitle: "外科包 (外層)",
+              subSceneImage: "https://i.postimg.cc/FHt9G01N/wei-ming-ming-2.jpg", 
+              historyImages: ["https://i.postimg.cc/FHt9G01N/wei-ming-ming-2.jpg"],
+              subSceneItems: [
+                 { zoneId: "外科包-SAM", label: "SAM護木", top: 33, left: 28, width: 55, height: 22, checked: false, subItems: [] },
+                 { zoneId: "外科包-食鹽水", label: "食鹽水", top: 33, left: 10, width: 14, height: 22, checked: false, subItems: [] },
+                 { 
+                   label: "打開內層", top: 58, left: 28, width: 55, height: 30,
+                   isSubScene: true,
+                   subSceneTitle: "外科包 (內層)",
+                   subSceneImage: "https://i.postimg.cc/Cxjw2dfJ/wei-ming-ming-23.jpg", 
+                   historyImages: ["https://i.postimg.cc/Cxjw2dfJ/wei-ming-ming-23.jpg"],
+                   subSceneItems: [
+                      { zoneId: "外科包-內部耗材1", label: "手套", top: 45, left: 20, width: 55, height: 10, checked: false, subItems: [] }, 
+                      { zoneId: "外科包-內部耗材2", label: "3X3", top: 58, left: 20, width: 55, height: 10, checked: false, subItems: [] },
+                      { zoneId: "外科包-內部耗材4", label: "止血帶", top: 54, left: 78, width: 15, height: 15, checked: false, subItems: [] },
+                      { zoneId: "外科包-內部耗材3", label: "5X8", top: 75, left: 20, width: 55, height: 10, checked: false, subItems: [] }
+                   ]
+                 }
+              ]
+            },
+            { 
+              label: "內科包 ", top: 70, left: 45, width: 55, height: 30, 
+              isSubScene: true, 
+              subSceneTitle: "內科包目錄", 
+              subSceneImage: "https://i.postimg.cc/L5sSYXJN/S-181854240-0.jpg",
+              historyImages: ["https://i.postimg.cc/L5sSYXJN/S-181854240-0.jpg"],
+              subSceneItems: [
+                 { zoneId: "內科包-右袋", label: "右袋 (檢查)", top: 40, left: 78, width: 18, height: 40, checked: false, subItems: [] },
+                 { 
+                   label: "左袋打開", top: 40, left: 8, width: 18, height: 40,
+                   isSubScene: true,
+                   subSceneTitle: "內科包-左袋",
+                   subSceneImage: "https://i.postimg.cc/prvwzdyf/S-181854230-0.jpg",
+                   historyImages: ["https://i.postimg.cc/prvwzdyf/S-181854230-0.jpg"],
+                   subSceneItems: [
+                     { zoneId: "內科包-左袋1", label: "IVset", top: 20, left: 20, width: 70, height:40, checked: false, subItems: [] },
+                     { zoneId: "內科包-左袋2", label: "N/S", top: 63, left: 20, width: 70, height: 40, checked: false, subItems: [] }
+                   ]
+                 },
+                 { 
+                   label: "主袋打開", top: 30, left: 26, width: 50, height: 30,
+                   isSubScene: true,
+                   subSceneTitle: "內科包-主袋",
+                   subSceneImage: "https://i.postimg.cc/zGNyvwJT/S-181854236-0.jpg",
+                   historyImages: ["https://i.postimg.cc/zGNyvwJT/S-181854236-0.jpg"],
+                   subSceneItems: [
+                     { zoneId: "內科包-主袋1", label: "BVM/LMA", top: 20, left: 20, width: 65, height: 40, checked: false, subItems: [] },
+                     { zoneId: "內科包-主袋2", label: "氧氣導管", top: 62, left: 20, width: 65, height: 30, checked: false, subItems: [] }
+                   ]
+                 },
+                 { 
+                   label: "前袋打開", top: 62, left: 26, width: 50, height: 30,
+                   isSubScene: true,
+                   subSceneTitle: "內科包-前袋",
+                   subSceneImage: "https://i.postimg.cc/mgk0QJ2Z/S-181854235-0.jpg",
+                   historyImages: ["https://i.postimg.cc/mgk0QJ2Z/S-181854235-0.jpg"],
+                   subSceneItems: [
+                     { zoneId: "內科包-前袋1", label: "小兒面罩", top: 40, left: 20, width: 65, height: 20, checked: false, subItems: [] },
+                     { zoneId: "內科包-前袋2", label: "進階呼吸道", top: 63, left: 20, width: 65, height: 30, checked: false, subItems: [] }
+                   ]
+                 }
+              ]
+            } 
+          ]
+        },
+        {
+          sceneName: "左側裝備區 (2)",
+          imageUrl: "https://i.postimg.cc/XJb370BD/S-181854242-0.jpg",
+          historyImages: ["https://i.postimg.cc/XJb370BD/S-181854242-0.jpg"],
+          items: [
+             { zoneId: "左側2-ZOLL", label: "ZOLL X", top: 32, left: 8, width: 40, height: 20, checked: false, subItems: [] },
+             { zoneId: "左側2-血糖包", label: "血糖包", top: 39, left: 40, width: 8, height: 12, checked: false, subItems: [] },
+             { zoneId: "左側2-手套箱", label: "約束帶", top: 17, left: 8, width: 40, height: 12, checked: false, subItems: [] },
+             { zoneId: "左側2-藥包", label: "藥包/插管包", top: 53, left: 8, width: 40, height: 12, checked: false, subItems: [] },
+             { zoneId: "左側2-潮氣瓶", label: "潮氣瓶", top: 18, left: 55, width: 15, height: 18, checked: false, subItems: [] },
+             { zoneId: "左側2-產包", label: "產包/燙傷包", top: 60, left: 53, width: 26, height: 18, checked: false, subItems: [] }
+          ]
+        },
+        {
+          sceneName: "右側座位區",
+          imageUrl: "https://i.postimg.cc/1z02BVft/S-181862404.jpg",
+          historyImages: ["https://i.postimg.cc/1z02BVft/S-181862404.jpg"],
+          items: [
+             { zoneId: "右側座-KED", label: "KED", top: 13, left: 23, width: 27, height: 12, checked: false, subItems: [] },
+             { zoneId: "右側座-骨盆", label: "骨盆固定帶", top: 13, left: 57, width: 13, height: 12, checked: false, subItems: [] },
+             { zoneId: "右側座-頸圈", label: "頸圈(備用)", top: 13, left: 75, width: 20, height: 12, checked: false, subItems: [] }
+          ]
+        },
+        {
+          sceneName: "右側車外",
+          imageUrl: "https://i.postimg.cc/hPJYw5fJ/S-181854227-0.jpg",
+          historyImages: ["https://i.postimg.cc/hPJYw5fJ/S-181854227-0.jpg"],
+          items: [
+             { zoneId: "右側外-搬運毯", label: "搬運毯", top: 15, left: 70, width: 22, height: 8, checked: false, subItems: [] },
+             { zoneId: "右側座-床單", label: "拋棄式床單", top: 60, left: 35, width: 24, height: 15, checked: false, subItems: [] },
+             { zoneId: "右側外-椅式擔架", label: "椅式擔架", top: 30, left: 70, width: 22, height: 62, checked: false, subItems: [] }
+          ]
+        }
+      ];
+    }
 
+    // 全域變數
+    let checklistData = getInitialChecklistDataTemplate();
     let currentSceneIdx = 0;
     let inspector = "";
+    let currentVehicle = "91"; // 追蹤目前選取的車號
     let isAdmin = false; 
     let subSceneStack = []; 
     let isEditMode = false;
@@ -1124,9 +1136,11 @@
         });
     }
 
-    async function loadSceneLayoutsFromFirestore() {
+    // 依照車號載入獨立的排版配置
+    async function loadSceneLayoutsFromFirestore(vehicle) {
+      const collectionName = `v${vehicle}_layouts`;
       try {
-        const querySnapshot = await getDocs(collection(db, "passport_layouts"));
+        const querySnapshot = await getDocs(collection(db, collectionName));
         if (!querySnapshot.empty) {
           querySnapshot.forEach((docSnap) => {
             const sceneName = docSnap.id;
@@ -1142,19 +1156,21 @@
           });
         }
       } catch (err) {
-        console.warn("使用預設版面配置（尚未偵測到雲端覆蓋）", err);
+        console.warn(`[${vehicle}車] 使用預設版面配置（尚未偵測到雲端覆蓋）`, err);
       }
     }
 
-    async function loadChecklistConfigFromFirestore() {
+    // 依照車號載入獨立的點檢項目清單
+    async function loadChecklistConfigFromFirestore(vehicle) {
+      const collectionName = `v${vehicle}_config`;
       try {
-        const querySnapshot = await getDocs(collection(db, "passport_config"));
+        const querySnapshot = await getDocs(collection(db, collectionName));
         let config = {};
 
         if (querySnapshot.empty) {
-          document.getElementById('loading-text').innerText = "初始化清單寫入資料庫...";
+          document.getElementById('loading-text').innerText = `初始化 ${vehicle} 車清單寫入資料庫...`;
           for (const [zoneId, items] of Object.entries(defaultFirestoreConfig)) {
-            await setDoc(doc(db, "passport_config", zoneId), { items: items });
+            await setDoc(doc(db, collectionName, zoneId), { items: items });
             config[zoneId] = items;
           }
         } else {
@@ -1164,7 +1180,7 @@
         }
         return config;
       } catch (err) {
-        console.error("Firestore 讀取失敗：", err);
+        console.error(`[${vehicle}車] Firestore 讀取失敗：`, err);
         throw err;
       }
     }
@@ -1213,29 +1229,10 @@
 
     async function initialize() {
       try {
-        document.getElementById('loading-text').innerText = "正在載入排版配置...";
-        await loadSceneLayoutsFromFirestore();
-
-        document.getElementById('loading-text').innerText = "正在讀取資料庫配置...";
-        const sheetConfig = await loadChecklistConfigFromFirestore();
-        if (sheetConfig) {
-          checklistData.forEach(scene => {
-            applyConfig(scene.items, sheetConfig);
-          });
-        }
-        
-        document.getElementById('loading-text').innerText = "正在準備主畫面...";
-        const firstImageUrl = checklistData[0].imageUrl;
-        await preloadSingleImage(firstImageUrl, 2500);
-
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('overlay-start').style.display = 'flex';
-
-        const allUrls = getAllImageUrls().filter(url => url !== firstImageUrl);
-        preloadImagesInBackground(allUrls);
-
       } catch (err) {
-        console.error("載入失敗：", err);
+        console.error("初始化失敗：", err);
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('overlay-start').style.display = 'flex';
       }
@@ -1245,15 +1242,18 @@
 
     async function startApp() {
       const selectElement = document.getElementById('inspector-name');
+      const vehicleElement = document.getElementById('vehicle-id');
       const name = selectElement.value;
+      const vehicle = vehicleElement.value;
       
       if (!name) { 
         showAppAlert("提示", "請選擇姓名以開始點班"); 
         return; 
       }
 
+      currentVehicle = vehicle;
       const loginBtn = document.getElementById('login-btn');
-      loginBtn.innerText = "驗證身分中...";
+      loginBtn.innerText = `載入 ${currentVehicle} 車資料中...`;
       loginBtn.disabled = true;
 
       try {
@@ -1275,30 +1275,43 @@
           }
         }
 
+        // 每次重新登入時重置點班模板，防止前一台車的修改滲透
+        checklistData = getInitialChecklistDataTemplate();
+        currentSceneIdx = 0;
+        subSceneStack = [];
+
+        // 載入當前車輛專屬的排版與耗材資料
+        await loadSceneLayoutsFromFirestore(currentVehicle);
+        const sheetConfig = await loadChecklistConfigFromFirestore(currentVehicle);
+        if (sheetConfig) {
+          checklistData.forEach(scene => {
+            applyConfig(scene.items, sheetConfig);
+          });
+        }
+
+        const firstImageUrl = checklistData[0].imageUrl;
+        await preloadSingleImage(firstImageUrl, 2500);
+
         document.getElementById('overlay-start').style.display = 'none';
         
         if (isAdmin) {
-          showAppAlert("登入成功 (管理者)", `歡迎您，管理者 ${inspector}。\n已開啟多層級自由編輯與背景圖管理權限。`);
+          showAppAlert("登入成功 (管理者)", `歡迎您，管理者 ${inspector}。\n目前車號：${currentVehicle} 車。\n已開啟獨立編輯與背景圖管理權限。`);
           document.getElementById('toggle-edit-mode-btn').style.display = 'inline-block';
           document.getElementById('subscene-edit-btn').style.display = 'inline-block';
         } else {
-          showAppAlert("登入成功", `歡迎您，點班員 ${inspector}。`);
+          showAppAlert("登入成功", `歡迎您，點班員 ${inspector}。\n目前車號：${currentVehicle} 車。`);
           document.getElementById('toggle-edit-mode-btn').style.display = 'none';
           document.getElementById('subscene-edit-btn').style.display = 'none';
         }
         
         renderScene();
+
+        const allUrls = getAllImageUrls().filter(url => url !== firstImageUrl);
+        preloadImagesInBackground(allUrls);
+
       } catch (err) {
-        console.warn("登入時出現異常，已啟用安全通關容錯模式: ", err);
-        inspector = name;
-        isAdmin = (name === "劉奕昕"); 
-        
-        document.getElementById('overlay-start').style.display = 'none';
-        if (isAdmin) {
-          document.getElementById('toggle-edit-mode-btn').style.display = 'inline-block';
-          document.getElementById('subscene-edit-btn').style.display = 'inline-block';
-        }
-        renderScene();
+        console.warn("登入載入時出現異常: ", err);
+        showAppAlert("載入失敗", "無法載入該車號資料：" + err.message);
       } finally {
         loginBtn.innerText = "開始點班";
         loginBtn.disabled = false;
@@ -1311,15 +1324,7 @@
         isAdmin = false;
         isEditMode = false;
         document.getElementById('layout-edit-toolbar').style.display = 'none';
-        function resetItems(items) {
-            items.forEach(item => {
-                if(item.checked !== undefined) item.checked = false;
-                if(item.visited !== undefined) item.visited = false;
-                if(item.subItems) item.subItems.forEach(sub => sub.checked = false);
-                if(item.subSceneItems) resetItems(item.subSceneItems);
-            });
-        }
-        checklistData.forEach(scene => resetItems(scene.items));
+        checklistData = getInitialChecklistDataTemplate();
         currentSceneIdx = 0;
         subSceneStack = [];
         document.getElementById('subscene-overlay').style.display = 'none';
@@ -1341,7 +1346,7 @@
       const scene = checklistData[currentSceneIdx];
       const img = document.getElementById('current-image');
       
-      document.getElementById('scene-title').innerText = scene.sceneName;
+      document.getElementById('scene-title').innerText = `${currentVehicle}車 - ${scene.sceneName}`;
       document.getElementById('scene-indicator').innerText = `${currentSceneIdx + 1} / ${checklistData.length}`;
 
       if (img.src === scene.imageUrl && img.complete && img.naturalWidth !== 0) {
@@ -1602,9 +1607,10 @@
       editingItem = null;
     }
 
-    // ===== 儲存當前場景(含所有深層特寫與底圖)至雲端資料庫 =====
+    // ===== 儲存當前場景至對應車號的雲端資料庫 =====
     async function saveCurrentSceneLayout() {
       const scene = checklistData[currentSceneIdx];
+      const collectionName = `v${currentVehicle}_layouts`;
       
       function cleanItems(items) {
         return items.map(item => {
@@ -1630,12 +1636,12 @@
       const itemsToSave = cleanItems(scene.items);
 
       try {
-        await setDoc(doc(db, "passport_layouts", scene.sceneName), {
+        await setDoc(doc(db, collectionName, scene.sceneName), {
           imageUrl: scene.imageUrl, 
           historyImages: scene.historyImages || [scene.imageUrl],
           items: itemsToSave
         });
-        showAppAlert("儲存成功", `「${scene.sceneName}」及其所有特寫內層配置已完整寫入雲端！`);
+        showAppAlert("儲存成功", `「${currentVehicle} 車 - ${scene.sceneName}」及其特寫內層配置已寫入雲端！`);
       } catch (err) {
         console.error("排版儲存失敗:", err);
         showAppAlert("失敗", "排版儲存失敗: " + err.message);
@@ -1726,7 +1732,7 @@
 
       try {
         const ctx = getActiveContext();
-        const fileRef = ref(storage, `base_images/bg_${Date.now()}_${file.name}`);
+        const fileRef = ref(storage, `base_images/v${currentVehicle}_bg_${Date.now()}_${file.name}`);
         const snapshot = await uploadBytes(fileRef, file);
         const downloadUrl = await getDownloadURL(snapshot.ref);
 
@@ -1757,7 +1763,7 @@
       urlInput.value = "上傳中...";
 
       try {
-        const fileRef = ref(storage, `base_images/subscene_${Date.now()}_${file.name}`);
+        const fileRef = ref(storage, `base_images/v${currentVehicle}_subscene_${Date.now()}_${file.name}`);
         const snapshot = await uploadBytes(fileRef, file);
         const downloadUrl = await getDownloadURL(snapshot.ref);
 
@@ -1783,7 +1789,7 @@
         const title = document.getElementById('subscene-title');
         
         overlay.style.display = 'flex';
-        title.innerText = item.subSceneTitle || item.label;
+        title.innerText = `${currentVehicle}車 - ${item.subSceneTitle || item.label}`;
         
         if (img.src === item.subSceneImage && img.complete && img.naturalWidth !== 0) {
             img.style.opacity = 1;
@@ -1834,7 +1840,7 @@
       const modal = document.getElementById('modal-overlay');
       const adminPanel = document.getElementById('admin-panel');
       
-      document.getElementById('modal-title').innerText = item.label;
+      document.getElementById('modal-title').innerText = `${currentVehicle}車 - ${item.label}`;
       
       if (isAdmin) {
         adminPanel.style.display = 'block';
@@ -1854,7 +1860,7 @@
       renderModalList();
     }
 
-   function renderModalList() {
+    function renderModalList() {
       const list = document.getElementById('modal-list');
       list.innerHTML = ''; 
       
@@ -1869,7 +1875,6 @@
         
         let itemLeftHtml = '';
         if (isAdmin) {
-          // 管理者模式：顯示輸入框供修改
           itemLeftHtml = `
             <span class="expand-arrow" onclick="event.stopPropagation(); toggleExpandSubItem(${subIdx});">${isExpanded ? '▼' : '▶'}</span>
             <input type="text" class="admin-input" style="flex: 2; margin-right: 5px; height: 28px;" value="${sub.name}" 
@@ -1880,7 +1885,6 @@
                    onchange="updateSubItemField(${subIdx}, 'unit', this.value)" onclick="event.stopPropagation()">
           `;
         } else {
-          // 一般模式：顯示標籤與數量 Badge
           const badgeHtml = (quantity) 
             ? `<div class="qty-badge">
                  <span class="qty-prefix">數量:</span>
@@ -1914,7 +1918,6 @@
         `;
         container.appendChild(itemRow);
 
-        // 照片面板部分保持不變...
         const mediaPanel = document.createElement('div');
         mediaPanel.className = 'item-media-panel';
         mediaPanel.style.display = isExpanded ? 'block' : 'none';
@@ -1946,6 +1949,7 @@
         list.appendChild(container);
       });
     }
+
     function toggleSubItem(sub, subIdx) {
       sub.checked = !sub.checked; 
       const el = document.getElementById(`sub-cb-${subIdx}`);
@@ -1963,7 +1967,7 @@
 
       try {
         const zoneId = currentCheckItem.zoneId;
-        const fileRef = ref(storage, `step_images/${zoneId}_${subIdx}_${Date.now()}_${file.name}`);
+        const fileRef = ref(storage, `step_images/v${currentVehicle}_${zoneId}_${subIdx}_${Date.now()}_${file.name}`);
         
         const snapshot = await uploadBytes(fileRef, file);
         const downloadUrl = await getDownloadURL(snapshot.ref);
@@ -1971,7 +1975,7 @@
         currentCheckItem.subItems[subIdx].imgUrl = downloadUrl;
 
         if (currentCheckItem.zoneId) {
-          await setDoc(doc(db, "passport_config", currentCheckItem.zoneId), {
+          await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
             items: currentCheckItem.subItems
           });
         }
@@ -1996,7 +2000,7 @@
           delete sub.imgUrl;
 
           if (currentCheckItem.zoneId) {
-            await setDoc(doc(db, "passport_config", currentCheckItem.zoneId), {
+            await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
               items: currentCheckItem.subItems
             });
           }
@@ -2010,29 +2014,24 @@
       });
     }
 
-
-// --- 新增：管理者修改欄位邏輯 ---
+    // 管理者修改欄位邏輯 (獨立存入該車設定)
     async function updateSubItemField(idx, field, value) {
       if (!currentCheckItem || !currentCheckItem.subItems) return;
       
-      // 1. 更新本地端的資料物件
       currentCheckItem.subItems[idx][field] = value;
       
-      // 2. 如果該區塊有 zoneId，則同步更新到 Firebase
       if (currentCheckItem.zoneId) {
         try {
-          await setDoc(doc(db, "passport_config", currentCheckItem.zoneId), {
+          await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
             items: currentCheckItem.subItems
           });
-          console.log(`同步成功: [${field}] 已更正為 ${value}`);
+          console.log(`[${currentVehicle}車] 同步成功: [${field}] 已更正為 ${value}`);
         } catch (err) {
           console.error("同步至雲端失敗: ", err);
         }
       }
     }
 
-   
-    
     async function addChecklistItem() {
       const nameInput = document.getElementById('admin-new-name');
       const qtyInput = document.getElementById('admin-new-qty');
@@ -2063,7 +2062,7 @@
 
         if (currentCheckItem.zoneId) {
           try {
-            await setDoc(doc(db, "passport_config", currentCheckItem.zoneId), {
+            await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
               items: currentCheckItem.subItems
             });
           } catch (err) {
@@ -2085,7 +2084,7 @@
 
         if (currentCheckItem.zoneId) {
           try {
-            await setDoc(doc(db, "passport_config", currentCheckItem.zoneId), {
+            await setDoc(doc(db, `v${currentVehicle}_config`, currentCheckItem.zoneId), {
               items: currentCheckItem.subItems
             });
           } catch (err) {
@@ -2112,7 +2111,7 @@
       const totalCount = items.length;
 
       const adminTag = isAdmin ? " [管理者]" : "";
-      document.getElementById('check-status').innerText = `點檢員: ${inspector}${adminTag} | 本區進度: ${completedCount}/${totalCount}`;
+      document.getElementById('check-status').innerText = `車號: ${currentVehicle}車 | 點檢員: ${inspector}${adminTag} | 進度: ${completedCount}/${totalCount}`;
       checkButtonStatus();
     }
 
@@ -2225,12 +2224,12 @@
           renderScene();
           showAppAlert(
             "⚠️ 尚未完成", 
-            `請檢查：「${validation.sceneName}」的\n「${validation.missingItemLabel}」`
+            `請檢查 ${currentVehicle} 車：「${validation.sceneName}」的\n「${validation.missingItemLabel}」`
           );
           return; 
       }
 
-      showAppConfirm("確認提交", "所有項目已檢查完畢，確定要送出嗎？", function() {
+      showAppConfirm("確認提交", `${currentVehicle} 車所有項目已檢查完畢，確定要送出嗎？`, function() {
           executeSubmission();
       });
     }
@@ -2251,12 +2250,13 @@
       try {
         await addDoc(collection(db, "passport_records"), {
           createdAt: serverTimestamp(),
+          vehicle: currentVehicle,
           inspector: inspector,
           checks: checklistData,
-          summary: summaryText
+          summary: `[${currentVehicle}車] ${summaryText}`
         });
 
-        showAppAlert("提交成功", "點班紀錄已順利儲存至資料庫！");
+        showAppAlert("提交成功", `${currentVehicle} 車點班紀錄已順利儲存至資料庫！`);
         resetApp();
       } catch (err) {
         showAppAlert("提交失敗", "存取錯誤：" + err.message);
@@ -2290,7 +2290,7 @@
     window.deleteBgFromGallery = deleteBgFromGallery;
     window.uploadSceneBgImage = uploadSceneBgImage;
     window.uploadSubSceneBgImage = uploadSubSceneBgImage;
-      window.updateSubItemField = updateSubItemField;
+    window.updateSubItemField = updateSubItemField;
   </script>
 </body>
 </html>
