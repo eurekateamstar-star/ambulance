@@ -1854,7 +1854,7 @@
       renderModalList();
     }
 
-    function renderModalList() {
+   function renderModalList() {
       const list = document.getElementById('modal-list');
       list.innerHTML = ''; 
       
@@ -1867,13 +1867,33 @@
         const quantity = sub.qty || sub.quantity || "";
         const unit = sub.unit || "";
         
-        const badgeHtml = (quantity) 
-          ? `<div class="qty-badge">
-               <span class="qty-prefix">數量:</span>
-               <span class="qty-num">${quantity}</span>
-               <span class="qty-unit">${unit}</span>
-             </div>` 
-          : '';
+        let itemLeftHtml = '';
+        if (isAdmin) {
+          // 管理者模式：顯示輸入框供修改
+          itemLeftHtml = `
+            <span class="expand-arrow" onclick="event.stopPropagation(); toggleExpandSubItem(${subIdx});">${isExpanded ? '▼' : '▶'}</span>
+            <input type="text" class="admin-input" style="flex: 2; margin-right: 5px; height: 28px;" value="${sub.name}" 
+                   onchange="updateSubItemField(${subIdx}, 'name', this.value)" onclick="event.stopPropagation()">
+            <input type="text" class="admin-input" style="width: 40px; margin-right: 2px; height: 28px; text-align: center;" value="${quantity}" 
+                   onchange="updateSubItemField(${subIdx}, 'qty', this.value)" onclick="event.stopPropagation()">
+            <input type="text" class="admin-input" style="width: 35px; height: 28px; text-align: center;" value="${unit}" 
+                   onchange="updateSubItemField(${subIdx}, 'unit', this.value)" onclick="event.stopPropagation()">
+          `;
+        } else {
+          // 一般模式：顯示標籤與數量 Badge
+          const badgeHtml = (quantity) 
+            ? `<div class="qty-badge">
+                 <span class="qty-prefix">數量:</span>
+                 <span class="qty-num">${quantity}</span>
+                 <span class="qty-unit">${unit}</span>
+               </div>` 
+            : '';
+          itemLeftHtml = `
+            <span class="expand-arrow" onclick="event.stopPropagation(); toggleExpandSubItem(${subIdx});">${isExpanded ? '▼' : '▶'}</span>
+            <span class="checklist-label">${sub.name}</span>
+            ${badgeHtml}
+          `;
+        }
 
         const deleteButtonHtml = isAdmin 
           ? `<button class="admin-delete-btn" onclick="event.stopPropagation(); removeChecklistItem(${subIdx});">刪除</button>` 
@@ -1885,11 +1905,7 @@
 
         itemRow.innerHTML = `
           <div class="checklist-item-left">
-            <span class="expand-arrow" onclick="event.stopPropagation(); toggleExpandSubItem(${subIdx});">
-              ${isExpanded ? '▼' : '▶'}
-            </span>
-            <span class="checklist-label">${sub.name}</span>
-            ${badgeHtml}
+            ${itemLeftHtml}
           </div>
           <div style="display: flex; align-items: center;">
             ${deleteButtonHtml}
@@ -1898,16 +1914,16 @@
         `;
         container.appendChild(itemRow);
 
+        // 照片面板部分保持不變...
         const mediaPanel = document.createElement('div');
         mediaPanel.className = 'item-media-panel';
         mediaPanel.style.display = isExpanded ? 'block' : 'none';
 
         let mediaContentHtml = '';
-
         if (sub.imgUrl) {
           mediaContentHtml += `
             <div class="media-preview-container">
-              <img src="${sub.imgUrl}" class="media-preview-img" onclick="window.open('${sub.imgUrl}', '_blank')" title="點擊放大圖片">
+              <img src="${sub.imgUrl}" class="media-preview-img" onclick="window.open('${sub.imgUrl}', '_blank')">
               ${isAdmin ? `<button class="media-delete-btn" onclick="deleteItemImage(${subIdx})">✕ 刪除照片</button>` : ''}
             </div>
           `;
@@ -1925,14 +1941,11 @@
             </div>
           `;
         }
-
         mediaPanel.innerHTML = mediaContentHtml;
         container.appendChild(mediaPanel);
-        
         list.appendChild(container);
       });
     }
-
     function toggleSubItem(sub, subIdx) {
       sub.checked = !sub.checked; 
       const el = document.getElementById(`sub-cb-${subIdx}`);
@@ -1997,6 +2010,31 @@
       });
     }
 
+
+// --- 新增：管理者修改欄位邏輯 ---
+    async function updateSubItemField(idx, field, value) {
+      if (!currentCheckItem || !currentCheckItem.subItems) return;
+      
+      // 1. 更新本地端的資料物件
+      currentCheckItem.subItems[idx][field] = value;
+      
+      // 2. 如果該區塊有 zoneId，則同步更新到 Firebase
+      if (currentCheckItem.zoneId) {
+        try {
+          await setDoc(doc(db, "passport_config", currentCheckItem.zoneId), {
+            items: currentCheckItem.subItems
+          });
+          console.log(`同步成功: [${field}] 已更正為 ${value}`);
+        } catch (err) {
+          console.error("同步至雲端失敗: ", err);
+        }
+      }
+    }
+
+    // 這是原本就有的函數，接在下面即可
+    async function addChecklistItem() {
+      // ... 原本的程式碼 ...
+    
     async function addChecklistItem() {
       const nameInput = document.getElementById('admin-new-name');
       const qtyInput = document.getElementById('admin-new-qty');
@@ -2254,6 +2292,7 @@
     window.deleteBgFromGallery = deleteBgFromGallery;
     window.uploadSceneBgImage = uploadSceneBgImage;
     window.uploadSubSceneBgImage = uploadSubSceneBgImage;
+      window.updateSubItemField = updateSubItemField;
   </script>
 </body>
 </html>
