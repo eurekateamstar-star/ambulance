@@ -43,8 +43,27 @@
     }
     .header-content { pointer-events: auto; display: flex; flex-direction: column; align-items: center; }
     h1 { font-size: 18px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); margin: 0; font-weight: 600; letter-spacing: 0.5px;}
-    #check-status { font-size: 12px; color: #ddd; margin-top: 4px; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+    #check-status { font-size: 12px; color: #ddd; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
     
+    /* 頂部車號切換選單樣式 */
+    #header-vehicle-select {
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: white;
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    #header-vehicle-select option {
+      background-color: #1c1c1e;
+      color: white;
+    }
+
     /* --- 場景容器 --- */
     #scene-container, #subscene-container { 
       position: relative; 
@@ -760,13 +779,18 @@
     </div>
   </div>
 
-  <!-- 主畫面 -->
+  <!-- 主畫面 Header -->
   <header>
     <div class="header-content">
       <h1 id="scene-title">車尾</h1>
-      <div style="display: flex; align-items: center; justify-content: center; margin-top: 4px;">
+      <div style="display: flex; align-items: center; justify-content: center; margin-top: 6px; gap: 8px;">
+        <!-- 新增：頂部車號即時切換選單 -->
+        <select id="header-vehicle-select" onchange="switchVehicleInApp(this.value)">
+          <option value="91">🚑 91 車</option>
+          <option value="92">🚑 92 車</option>
+        </select>
         <div id="check-status">讀取中...</div>
-        <button id="toggle-edit-mode-btn" onclick="toggleEditMode(true)" style="display:none; margin-left:10px; background:var(--apple-orange); border:none; padding:4px 8px; border-radius:6px; color:white; font-size:11px; font-weight:700; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🛠️ 編輯版面</button>
+        <button id="toggle-edit-mode-btn" onclick="toggleEditMode(true)" style="display:none; background:var(--apple-orange); border:none; padding:4px 8px; border-radius:6px; color:white; font-size:11px; font-weight:700; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🛠️ 編輯版面</button>
       </div>
     </div>
   </header>
@@ -1136,7 +1160,7 @@
         });
     }
 
-    // 依照車號載入獨立的排版配置 (使用車號前綴避免觸發權限錯誤)
+    // 依照車號載入獨立的排版配置
     async function loadSceneLayoutsFromFirestore(vehicle) {
       try {
         const querySnapshot = await getDocs(collection(db, "passport_layouts"));
@@ -1162,7 +1186,7 @@
       }
     }
 
-    // 依照車號載入獨立的點檢項目清單 (使用車號前綴避免觸發權限錯誤)
+    // 依照車號載入獨立的點檢項目清單
     async function loadChecklistConfigFromFirestore(vehicle) {
       try {
         const querySnapshot = await getDocs(collection(db, "passport_config"));
@@ -1260,6 +1284,9 @@
       }
 
       currentVehicle = vehicle;
+      // 同步頂部車號選單
+      document.getElementById('header-vehicle-select').value = currentVehicle;
+
       const loginBtn = document.getElementById('login-btn');
       loginBtn.innerText = `載入 ${currentVehicle} 車資料中...`;
       loginBtn.disabled = true;
@@ -1283,12 +1310,12 @@
           }
         }
 
-        // 每次重新登入時重置點班模板
+        // 重置點班模板
         checklistData = getInitialChecklistDataTemplate();
         currentSceneIdx = 0;
         subSceneStack = [];
 
-        // 載入當前車輛專屬的排版與耗材資料
+        // 載入當前車輛專屬資料
         await loadSceneLayoutsFromFirestore(currentVehicle);
         const sheetConfig = await loadChecklistConfigFromFirestore(currentVehicle);
         if (sheetConfig) {
@@ -1324,6 +1351,56 @@
         loginBtn.innerText = "開始點班";
         loginBtn.disabled = false;
       }
+    }
+
+    // ===== 新增：進入點班後，從頂部選單即時切換車號 =====
+    async function switchVehicleInApp(newVehicle) {
+      if (newVehicle === currentVehicle) return;
+
+      showAppConfirm("切換車號", `確定要切換至 ${newVehicle} 車嗎？\n(注意：切換車號將會重置當前尚未提交的點班勾選紀錄)`, async function() {
+        currentVehicle = newVehicle;
+        // 同步登入頁面的下拉選單
+        document.getElementById('vehicle-id').value = currentVehicle;
+        document.getElementById('header-vehicle-select').value = currentVehicle;
+
+        document.getElementById('check-status').innerText = `正在載入 ${currentVehicle} 車資料...`;
+
+        try {
+          // 1. 重置點班狀態
+          checklistData = getInitialChecklistDataTemplate();
+          currentSceneIdx = 0;
+          subSceneStack = [];
+          
+          if (document.getElementById('subscene-overlay').style.display !== 'none') {
+            document.getElementById('subscene-overlay').style.display = 'none';
+          }
+
+          // 2. 載入目標車輛專屬資料
+          await loadSceneLayoutsFromFirestore(currentVehicle);
+          const sheetConfig = await loadChecklistConfigFromFirestore(currentVehicle);
+          if (sheetConfig) {
+            checklistData.forEach(scene => {
+              applyConfig(scene.items, sheetConfig);
+            });
+          }
+
+          // 3. 預載並重新渲染畫面
+          const firstImageUrl = checklistData[0].imageUrl;
+          await preloadSingleImage(firstImageUrl, 2500);
+
+          renderScene();
+          showAppAlert("切換成功", `已成功切換至 ${currentVehicle} 車！`);
+
+          const allUrls = getAllImageUrls().filter(url => url !== firstImageUrl);
+          preloadImagesInBackground(allUrls);
+        } catch (err) {
+          console.error("切換車號失敗：", err);
+          showAppAlert("切換失敗", err.message);
+        }
+      }, function() {
+        // 使用者取消切換，拉回原先的選單選項
+        document.getElementById('header-vehicle-select').value = currentVehicle;
+      });
     }
 
     function resetApp() {
@@ -2119,7 +2196,7 @@
       const totalCount = items.length;
 
       const adminTag = isAdmin ? " [管理者]" : "";
-      document.getElementById('check-status').innerText = `車號: ${currentVehicle}車 | 點檢員: ${inspector}${adminTag} | 進度: ${completedCount}/${totalCount}`;
+      document.getElementById('check-status').innerText = `點檢員: ${inspector}${adminTag} | 進度: ${completedCount}/${totalCount}`;
       checkButtonStatus();
     }
 
@@ -2190,10 +2267,13 @@
     }
 
     let onConfirmCallback = null;
-    function showAppConfirm(title, msg, callback) {
+    let onCancelCallback = null;
+
+    function showAppConfirm(title, msg, callback, cancelCallback = null) {
       document.getElementById('app-confirm-title').innerText = title;
       document.getElementById('app-confirm-msg').innerText = msg;
       onConfirmCallback = callback;
+      onCancelCallback = cancelCallback;
       document.getElementById('app-confirm-overlay').style.display = 'flex';
     }
 
@@ -2201,8 +2281,11 @@
       document.getElementById('app-confirm-overlay').style.display = 'none';
       if (isConfirmed && onConfirmCallback) {
         onConfirmCallback();
+      } else if (!isConfirmed && onCancelCallback) {
+        onCancelCallback();
       }
       onConfirmCallback = null;
+      onCancelCallback = null;
     }
 
     function validateChecklist() {
@@ -2275,6 +2358,7 @@
 
     // 將內部方法掛載至 window 全域環境
     window.startApp = startApp;
+    window.switchVehicleInApp = switchVehicleInApp;
     window.changeScene = changeScene;
     window.backSubScene = backSubScene;
     window.saveChecklist = saveChecklist;
