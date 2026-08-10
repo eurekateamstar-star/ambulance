@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,7 +16,10 @@
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
 
+  <!-- Google Fonts & html2canvas (轉圖片引擎) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <style>
     /* --- 全域變數 & 基礎設定 --- */
     :root { 
@@ -489,6 +491,112 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
+    /* --- 點班完成表 (Summary Report Overlay) --- */
+    #summary-report-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      z-index: 250; display: none; justify-content: center; align-items: center;
+      padding: 15px; box-sizing: border-box; animation: fadeIn 0.3s ease-out;
+    }
+    .report-card {
+      width: 100%; max-width: 480px; max-height: 85vh; max-height: 85dvh;
+      background: #1e1e20; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px; display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+    }
+    .report-header {
+      padding: 18px 20px 14px 20px; background: rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center;
+    }
+    .report-header h2 { margin: 0 0 8px 0; font-size: 20px; color: var(--apple-green); font-weight: 700; letter-spacing: 0.5px; }
+    .report-meta { font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.6; }
+    .report-body { padding: 15px 20px; overflow-y: auto; flex: 1; }
+    .report-section { 
+      margin-bottom: 14px; background: rgba(255,255,255,0.04); 
+      border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.08); 
+    }
+    .report-section-title { 
+      font-size: 14px; font-weight: 700; color: var(--apple-blue); 
+      margin-bottom: 8px; border-bottom: 1px dashed rgba(255,255,255,0.15); padding-bottom: 4px; 
+    }
+    .report-item-row { 
+      display: flex; justify-content: space-between; align-items: center; 
+      font-size: 13px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); 
+    }
+    .report-item-row:last-child { border-bottom: none; }
+    .report-item-name { color: #f0f0f0; }
+    .report-item-status { color: var(--apple-green); font-weight: 700; font-size: 12px; }
+    .report-footer { 
+      padding: 14px 20px; display: flex; gap: 8px; flex-wrap: wrap;
+      border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); 
+    }
+    .report-btn { 
+      flex: 1; padding: 12px 0; border-radius: 12px; border: none; 
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+      min-width: 120px;
+    }
+    .report-btn:active { transform: scale(0.97); }
+    .save-img-btn { background: var(--apple-blue); color: white; box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); }
+    .view-cal-btn { background: rgba(255, 149, 0, 0.2); color: var(--apple-orange); border: 1px solid rgba(255, 149, 0, 0.4); }
+    .close-btn { background: var(--apple-green); color: white; box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4); }
+
+    /* --- 點班月曆彈出視窗 (Calendar Overlay) --- */
+    #calendar-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      z-index: 280; display: none; justify-content: center; align-items: center;
+      padding: 15px; box-sizing: border-box; animation: fadeIn 0.3s ease-out;
+    }
+    .calendar-card {
+      width: 100%; max-width: 440px; max-height: 90vh;
+      background: rgba(30, 30, 32, 0.95); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px; display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+    }
+    .calendar-header-bar {
+      padding: 16px; background: rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .calendar-title { font-size: 17px; font-weight: 700; color: white; margin: 0; }
+    .calendar-nav-btn {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      color: white; border-radius: 8px; width: 32px; height: 32px;
+      font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .calendar-nav-btn:active { background: rgba(255,255,255,0.25); }
+    .calendar-week-header {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      text-align: center; padding: 10px 10px 5px 10px; font-size: 12px;
+      font-weight: 700; color: rgba(255,255,255,0.5);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .calendar-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+      padding: 10px; overflow-y: auto; flex: 1;
+    }
+    .cal-day-cell {
+      aspect-ratio: 1/1; border-radius: 10px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      padding: 4px; display: flex; flex-direction: column; justify-content: space-between;
+      overflow: hidden; font-size: 11px; position: relative;
+    }
+    .cal-day-cell.other-month { opacity: 0.25; }
+    .cal-day-cell.today { border-color: var(--apple-blue); background: rgba(0,122,255,0.1); }
+    .cal-day-num { font-weight: 700; color: rgba(255,255,255,0.8); }
+    .cal-badge {
+      font-size: 9px; padding: 2px 3px; border-radius: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 2px; font-weight: 600; text-align: center;
+    }
+    .badge-v91 { background: rgba(52, 199, 89, 0.25); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.4); }
+    .badge-v92 { background: rgba(0, 122, 255, 0.25); color: #0a84ff; border: 1px solid rgba(0, 122, 255, 0.4); }
+    .calendar-footer {
+      padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex; gap: 8px; justify-content: flex-end;
+    }
+
     /* --- 啟動登入頁 --- */
     #overlay-start { 
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
@@ -503,7 +611,7 @@
       background-size: cover; filter: blur(15px); z-index: 1; opacity: 0.6;
     }
     .start-logo-wrapper {
-      position: relative; z-index: 2; width: 120px; height: 120px; margin-bottom: 30px;
+      position: relative; z-index: 2; width: 120px; height: 120px; margin-bottom: 20px;
       border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.25);
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); overflow: hidden;
       animation: floatLogo 3s ease-in-out infinite; background: #000;
@@ -512,7 +620,7 @@
     @keyframes floatLogo { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
 
     .login-card {
-      position: relative; z-index: 2; width: 80%; max-width: 320px; padding: 35px 30px;
+      position: relative; z-index: 2; width: 80%; max-width: 320px; padding: 30px 25px;
       background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.15);
       box-shadow: 0 25px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center;
@@ -522,12 +630,12 @@
       background: rgba(255,255,255,0.1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 15px center;
       background-size: 20px;
       border: 1px solid rgba(255,255,255,0.2); 
-      padding: 15px 40px 15px 20px; 
-      border-radius: 12px; color: white; font-size: 16px; 
+      padding: 14px 40px 14px 20px; 
+      border-radius: 12px; color: white; font-size: 15px; 
       width: 100%; 
       text-align: left; 
       text-align-last: left; 
-      outline: none; margin-bottom: 15px; 
+      outline: none; margin-bottom: 12px; 
       box-sizing: border-box; transition: 0.3s;
       cursor: pointer;
       appearance: none;
@@ -544,12 +652,19 @@
     }
     
     .start-btn { 
-      background: var(--apple-blue); color: white; border: none; padding: 15px 0; width: 100%; border-radius: 12px; 
+      background: var(--apple-blue); color: white; border: none; padding: 14px 0; width: 100%; border-radius: 12px; 
       font-size: 16px; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4); cursor: pointer;
       margin-top: 5px;
     }
     .start-btn:active { transform: scale(0.98); }
     .start-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; }
+
+    .cal-entry-btn {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.9); padding: 10px 0; width: 100%; border-radius: 12px;
+      font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: 0.2s;
+    }
+    .cal-entry-btn:active { background: rgba(255,255,255,0.2); }
 
     /* --- Loading --- */
     #loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 200; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column;}
@@ -628,6 +743,44 @@
       <div class="alert-footer confirm-footer">
         <button class="alert-btn cancel-btn" onclick="closeAppConfirm(false)">取消</button>
         <button class="alert-btn confirm-btn" onclick="closeAppConfirm(true)">確定送出</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 點班完成表彈出視窗 -->
+  <div id="summary-report-overlay">
+    <div class="report-card" id="report-card-element">
+      <div class="report-header">
+        <h2>🚑 救護車點班完成明細表</h2>
+        <div class="report-meta" id="report-meta-info"></div>
+      </div>
+      <div id="report-details-container" class="report-body">
+        <!-- JS 動態生成完成清單內容 -->
+      </div>
+      <div class="report-footer">
+        <button class="report-btn save-img-btn" onclick="saveReportAsImage()">📷 儲存圖片至相簿</button>
+        <button class="report-btn view-cal-btn" onclick="openCalendarOverlay()">📅 查看月曆紀錄</button>
+        <button class="report-btn close-btn" onclick="closeCompletionReport()">完成並返回</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 點班月曆紀錄彈窗 -->
+  <div id="calendar-overlay">
+    <div class="calendar-card">
+      <div class="calendar-header-bar">
+        <button class="calendar-nav-btn" onclick="changeCalMonth(-1)">◀</button>
+        <h3 class="calendar-title" id="calendar-month-title">2026 年 8 月</h3>
+        <button class="calendar-nav-btn" onclick="changeCalMonth(1)">▶</button>
+      </div>
+      <div class="calendar-week-header">
+        <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+      </div>
+      <div id="calendar-grid-container" class="calendar-grid">
+        <!-- JS 動態繪製月曆格子 -->
+      </div>
+      <div class="calendar-footer">
+        <button class="report-btn close-btn" style="flex:none; width:100px; padding:8px 0;" onclick="closeCalendarOverlay()">關閉</button>
       </div>
     </div>
   </div>
@@ -749,8 +902,8 @@
       <img src="https://i.postimg.cc/SRx0N7Vp/wei-ming-ming-2.jpg" alt="Logo">
     </div>
     <div class="login-card">
-      <h2 style="margin: 0 0 10px 0; font-size: 24px;">救護車點班系統</h2>
-      <div style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 25px; letter-spacing: 1.5px; font-weight: 600;">AMBULANCE CHECKLIST</div>
+      <h2 style="margin: 0 0 8px 0; font-size: 22px;">救護車點班系統</h2>
+      <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 20px; letter-spacing: 1.5px; font-weight: 600;">AMBULANCE CHECKLIST</div>
       
       <!-- 車號選擇選單 -->
       <select id="vehicle-id">
@@ -788,6 +941,7 @@
       </select>
       
       <button class="start-btn" id="login-btn" onclick="startApp()">開始點班</button>
+      <button class="cal-entry-btn" onclick="openCalendarOverlay()">📅 查看月曆點班紀錄</button>
     </div>
   </div>
 
@@ -796,7 +950,7 @@
     <div class="header-content">
       <h1 id="scene-title">車尾</h1>
       <div style="display: flex; align-items: center; justify-content: center; margin-top: 6px; gap: 8px;">
-        <!-- 新增：頂部車號即時切換選單 -->
+        <!-- 頂部車號即時切換選單 -->
         <select id="header-vehicle-select" onchange="switchVehicleInApp(this.value)">
           <option value="91">🚑 91 車</option>
           <option value="92">🚑 92 車</option>
@@ -827,7 +981,7 @@
   <!-- Firebase 10.8 SDK 模組引入與邏輯區 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
     // Firebase 連線參數
@@ -1124,6 +1278,10 @@
     let editingItem = null;
     let currentCheckItem = null;
 
+    // 月曆相關變數
+    let calDisplayDate = new Date();
+    let monthlyRecordsMap = {}; 
+
     // ===== 全局核心：取得當前畫面的物件 =====
     function getActiveContext() {
       if (subSceneStack.length > 0) {
@@ -1214,7 +1372,6 @@
           });
         }
 
-        // 如果該車輛沒有自訂設定，初始化該車輛的預設資料
         if (Object.keys(config).length === 0) {
           document.getElementById('loading-text').innerText = `初始化 ${vehicle} 車清單寫入資料庫...`;
           for (const [zoneId, items] of Object.entries(defaultFirestoreConfig)) {
@@ -1296,7 +1453,6 @@
       }
 
       currentVehicle = vehicle;
-      // 同步頂部車號選單
       document.getElementById('header-vehicle-select').value = currentVehicle;
 
       const loginBtn = document.getElementById('login-btn');
@@ -1322,12 +1478,10 @@
           }
         }
 
-        // 重置點班模板
         checklistData = getInitialChecklistDataTemplate();
         currentSceneIdx = 0;
         subSceneStack = [];
 
-        // 載入當前車輛專屬資料
         await loadSceneLayoutsFromFirestore(currentVehicle);
         const sheetConfig = await loadChecklistConfigFromFirestore(currentVehicle);
         if (sheetConfig) {
@@ -1365,20 +1519,17 @@
       }
     }
 
-    // ===== 新增：進入點班後，從頂部選單即時切換車號 =====
     async function switchVehicleInApp(newVehicle) {
       if (newVehicle === currentVehicle) return;
 
       showAppConfirm("切換車號", `確定要切換至 ${newVehicle} 車嗎？\n(注意：切換車號將會重置當前尚未提交的點班勾選紀錄)`, async function() {
         currentVehicle = newVehicle;
-        // 同步登入頁面的下拉選單
         document.getElementById('vehicle-id').value = currentVehicle;
         document.getElementById('header-vehicle-select').value = currentVehicle;
 
         document.getElementById('check-status').innerText = `正在載入 ${currentVehicle} 車資料...`;
 
         try {
-          // 1. 重置點班狀態
           checklistData = getInitialChecklistDataTemplate();
           currentSceneIdx = 0;
           subSceneStack = [];
@@ -1387,7 +1538,6 @@
             document.getElementById('subscene-overlay').style.display = 'none';
           }
 
-          // 2. 載入目標車輛專屬資料
           await loadSceneLayoutsFromFirestore(currentVehicle);
           const sheetConfig = await loadChecklistConfigFromFirestore(currentVehicle);
           if (sheetConfig) {
@@ -1396,7 +1546,6 @@
             });
           }
 
-          // 3. 預載並重新渲染畫面
           const firstImageUrl = checklistData[0].imageUrl;
           await preloadSingleImage(firstImageUrl, 2500);
 
@@ -1410,7 +1559,6 @@
           showAppAlert("切換失敗", err.message);
         }
       }, function() {
-        // 使用者取消切換，拉回原先的選單選項
         document.getElementById('header-vehicle-select').value = currentVehicle;
       });
     }
@@ -1464,7 +1612,6 @@
       };
       
       newImg.onerror = () => {
-        console.warn("主圖片載入失敗/逾時，強行顯示：", scene.imageUrl);
         img.src = scene.imageUrl;
         img.style.opacity = 1;
         createZones(scene.items, 'zone-layer', 'current-image', 'main-wrapper');
@@ -1704,7 +1851,6 @@
       editingItem = null;
     }
 
-    // ===== 儲存當前場景至對應車號的雲端資料庫 =====
     async function saveCurrentSceneLayout() {
       const scene = checklistData[currentSceneIdx];
       const docId = `${currentVehicle}_${scene.sceneName}`;
@@ -1745,7 +1891,6 @@
       }
     }
 
-    // ===== 背景圖庫管理邏輯 (多層級通用) =====
     function openBgManager() {
       const ctx = getActiveContext();
       const history = ctx.getHistory();
@@ -1819,7 +1964,6 @@
       });
     }
 
-    // ===== 管理者上傳「新背景圖」 (自動識別主場景或特寫內層) =====
     async function uploadSceneBgImage(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -2111,7 +2255,6 @@
       });
     }
 
-    // 管理者修改欄位邏輯 (獨立存入該車設定)
     async function updateSubItemField(idx, field, value) {
       if (!currentCheckItem || !currentCheckItem.subItems) return;
       
@@ -2359,12 +2502,233 @@
           summary: `[${currentVehicle}車] ${summaryText}`
         });
 
-        showAppAlert("提交成功", `${currentVehicle} 車點班紀錄已順利儲存至資料庫！`);
-        resetApp();
+        // 提交成功後，產生並顯示點班完成表
+        showCompletionReport();
       } catch (err) {
         showAppAlert("提交失敗", "存取錯誤：" + err.message);
       } finally {
         nextBtn.style.opacity = 1;
+      }
+    }
+
+    // ===== 渲染並顯示「點班完成明細表」 =====
+    function showCompletionReport() {
+      const now = new Date();
+      const timeStr = now.getFullYear() + '/' + 
+        String(now.getMonth() + 1).padStart(2, '0') + '/' + 
+        String(now.getDate()).padStart(2, '0') + ' ' + 
+        String(now.getHours()).padStart(2, '0') + ':' + 
+        String(now.getMinutes()).padStart(2, '0');
+
+      document.getElementById('report-meta-info').innerHTML = `
+        <div><strong>車號：</strong>🚑 ${currentVehicle} 車 &nbsp;|&nbsp; <strong>檢查人員：</strong>${inspector}</div>
+        <div><strong>完成時間：</strong>${timeStr}</div>
+        <div style="color: var(--apple-green); font-weight: bold; margin-top: 2px;">✔ 全部項目核對完成</div>
+      `;
+
+      const container = document.getElementById('report-details-container');
+      container.innerHTML = '';
+
+      checklistData.forEach(scene => {
+        const section = document.createElement('div');
+        section.className = 'report-section';
+        let sectionHtml = `<div class="report-section-title">📍 ${scene.sceneName}</div>`;
+
+        // 遞迴渲染主項目及子特寫內的清單
+        function extractSubItems(items) {
+          let rows = '';
+          items.forEach(item => {
+            if (item.isSubScene && item.subSceneItems) {
+              rows += extractSubItems(item.subSceneItems);
+            } else if (item.subItems && item.subItems.length > 0) {
+              item.subItems.forEach(sub => {
+                const qtyStr = sub.qty ? ` <span style="opacity: 0.7;">(${sub.qty}${sub.unit || ''})</span>` : '';
+                rows += `
+                  <div class="report-item-row">
+                    <span class="report-item-name">• ${sub.name}${qtyStr}</span>
+                    <span class="report-item-status">✓ 正常</span>
+                  </div>
+                `;
+              });
+            } else {
+              rows += `
+                <div class="report-item-row">
+                  <span class="report-item-name">• ${item.label}</span>
+                  <span class="report-item-status">✓ 正常</span>
+                </div>
+              `;
+            }
+          });
+          return rows;
+        }
+
+        sectionHtml += extractSubItems(scene.items);
+        section.innerHTML = sectionHtml;
+        container.appendChild(section);
+      });
+
+      document.getElementById('summary-report-overlay').style.display = 'flex';
+    }
+
+    function closeCompletionReport() {
+      document.getElementById('summary-report-overlay').style.display = 'none';
+      resetApp();
+    }
+
+    // ===== 轉為 JPG 圖片存入手機相簿/電腦 =====
+    async function saveReportAsImage() {
+      const cardElement = document.getElementById('report-card-element');
+      if (!cardElement) return;
+
+      const footer = cardElement.querySelector('.report-footer');
+      if (footer) footer.style.display = 'none'; // 轉圖時暫時隱藏按鈕列
+
+      showAppAlert("處理中", "正在將點班表產生為圖片檔，請稍候...");
+
+      try {
+        const canvas = await html2canvas(cardElement, {
+          scale: 2, 
+          useCORS: true,
+          backgroundColor: '#1e1e20'
+        });
+
+        if (footer) footer.style.display = 'flex'; // 恢復按鈕列
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        
+        // 建立下載連結
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const fileName = `救護車點班明細表_${currentVehicle}車_${inspector}_${dateStr}.jpg`;
+
+        const a = document.createElement('a');
+        a.href = imgData;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        closeAppAlert();
+        showAppAlert(
+          "圖片產生成功！", 
+          `點班表已成功匯出為圖片！\n【提示】：手機使用者若無自動下載，可於彈出新畫面長按圖片選擇「儲存至相簿」。`
+        );
+
+      } catch (err) {
+        if (footer) footer.style.display = 'flex';
+        console.error("產生圖片失敗：", err);
+        showAppAlert("產生圖片失敗", err.message);
+      }
+    }
+
+    // ===== 點班月曆邏輯 (Calendar Module) =====
+    async function openCalendarOverlay() {
+      document.getElementById('calendar-overlay').style.display = 'flex';
+      await loadMonthlyRecords();
+      renderCalendar();
+    }
+
+    function closeCalendarOverlay() {
+      document.getElementById('calendar-overlay').style.display = 'none';
+    }
+
+    async function changeCalMonth(delta) {
+      calDisplayDate.setMonth(calDisplayDate.getMonth() + delta);
+      await loadMonthlyRecords();
+      renderCalendar();
+    }
+
+    // 讀取 Firebase 該月份的所有點班紀錄
+    async function loadMonthlyRecords() {
+      monthlyRecordsMap = {};
+      try {
+        const querySnapshot = await getDocs(collection(db, "passport_records"));
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.createdAt && data.createdAt.toDate) {
+            const dateObj = data.createdAt.toDate();
+            const dateKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+            
+            if (!monthlyRecordsMap[dateKey]) {
+              monthlyRecordsMap[dateKey] = [];
+            }
+            monthlyRecordsMap[dateKey].push({
+              vehicle: data.vehicle || "91",
+              inspector: data.inspector || "未填寫",
+              timeStr: `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`
+            });
+          }
+        });
+      } catch (err) {
+        console.error("讀取月曆紀錄失敗:", err);
+      }
+    }
+
+    // 繪製月曆格子
+    function renderCalendar() {
+      const year = calDisplayDate.getFullYear();
+      const month = calDisplayDate.getMonth();
+
+      document.getElementById('calendar-month-title').innerText = `${year} 年 ${month + 1} 月`;
+
+      const gridContainer = document.getElementById('calendar-grid-container');
+      gridContainer.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      // 上個月的補齊格子
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell other-month';
+        cell.innerHTML = `<span class="cal-day-num">${daysInPrevMonth - i}</span>`;
+        gridContainer.appendChild(cell);
+      }
+
+      // 當月日曆格子
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell';
+
+        if (dateKey === todayStr) {
+          cell.classList.add('today');
+        }
+
+        let innerContent = `<span class="cal-day-num">${day}</span>`;
+
+        // 如果當天有點班紀錄
+        if (monthlyRecordsMap[dateKey] && monthlyRecordsMap[dateKey].length > 0) {
+          monthlyRecordsMap[dateKey].forEach(rec => {
+            const badgeClass = (rec.vehicle === "92") ? "badge-v92" : "badge-v91";
+            innerContent += `<div class="cal-badge ${badgeClass}" title="${rec.timeStr} ${rec.vehicle}車: ${rec.inspector}">🚑 ${rec.vehicle}車: ${rec.inspector}</div>`;
+          });
+
+          cell.onclick = () => {
+            let detailMsg = `📅 【${dateKey} 點班明細】\n`;
+            monthlyRecordsMap[dateKey].forEach(r => {
+              detailMsg += `• ${r.timeStr} | 🚑 ${r.vehicle} 車 | 人員：${r.inspector}\n`;
+            });
+            showAppAlert("點班歷史紀錄", detailMsg);
+          };
+          cell.style.cursor = "pointer";
+        }
+
+        cell.innerHTML = innerContent;
+        gridContainer.appendChild(cell);
+      }
+
+      // 下個月補齊格子
+      const totalCellsSoFar = firstDay + daysInMonth;
+      const nextMonthDays = (totalCellsSoFar % 7 === 0) ? 0 : 7 - (totalCellsSoFar % 7);
+      for (let i = 1; i <= nextMonthDays; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day-cell other-month';
+        cell.innerHTML = `<span class="cal-day-num">${i}</span>`;
+        gridContainer.appendChild(cell);
       }
     }
 
@@ -2395,6 +2759,11 @@
     window.uploadSceneBgImage = uploadSceneBgImage;
     window.uploadSubSceneBgImage = uploadSubSceneBgImage;
     window.updateSubItemField = updateSubItemField;
+    window.closeCompletionReport = closeCompletionReport;
+    window.saveReportAsImage = saveReportAsImage;
+    window.openCalendarOverlay = openCalendarOverlay;
+    window.closeCalendarOverlay = closeCalendarOverlay;
+    window.changeCalMonth = changeCalMonth;
   </script>
 </body>
 </html>
