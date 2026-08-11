@@ -14,7 +14,7 @@
 
   <!-- Android (Chrome) 桌面 App 設定 -->
   <meta name="mobile-web-app-capable" content="yes">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon.png">
+  <link class="icon" type="image/png" sizes="192x192" href="icon.png">
 
   <!-- Google Fonts & html2canvas (轉圖片引擎) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -549,7 +549,7 @@
       padding: 15px; box-sizing: border-box; animation: fadeIn 0.3s ease-out;
     }
     .calendar-card {
-      width: 100%; max-width: 440px; max-height: 90vh;
+      width: 100%; max-width: 500px; max-height: 90vh; /* 將卡片最大寬度由 440px 擴展至 500px */
       background: rgba(30, 30, 32, 0.95); border: 1px solid rgba(255,255,255,0.2);
       border-radius: 20px; display: flex; flex-direction: column; overflow: hidden;
       box-shadow: 0 25px 60px rgba(0,0,0,0.8);
@@ -577,18 +577,21 @@
       padding: 10px; overflow-y: auto; flex: 1;
     }
     .cal-day-cell {
-      aspect-ratio: 1/1; border-radius: 10px;
+      min-height: 95px; /* 取消原正方形限制，改設最小高度 95px，容納更多標籤 */
+      border-radius: 10px;
       background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-      padding: 4px; display: flex; flex-direction: column; justify-content: space-between;
+      padding: 4px; display: flex; flex-direction: column; justify-content: flex-start;
+      gap: 2px; /* 格內物件間距緊湊 */
       overflow: hidden; font-size: 11px; position: relative;
     }
     .cal-day-cell.other-month { opacity: 0.25; }
     .cal-day-cell.today { border-color: var(--apple-blue); background: rgba(0,122,255,0.1); }
-    .cal-day-num { font-weight: 700; color: rgba(255,255,255,0.8); }
+    .cal-day-num { font-weight: 700; color: rgba(255,255,255,0.8); margin-bottom: 2px; }
     .cal-badge {
-      font-size: 9px; padding: 2px 3px; border-radius: 4px;
+      font-size: 8px; padding: 1.5px 2px; border-radius: 4px; /* 調小字型與上下內距 */
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-top: 2px; font-weight: 600; text-align: center;
+      font-weight: 600; text-align: center;
+      line-height: 1.1;
     }
     .badge-v91 { background: rgba(52, 199, 89, 0.25); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.4); }
     .badge-v92 { background: rgba(0, 122, 255, 0.25); color: #0a84ff; border: 1px solid rgba(0, 122, 255, 0.4); }
@@ -846,7 +849,7 @@
       <div class="modal-header" id="modal-title">檢查項目</div>
       <div id="modal-list"></div>
       
-      <!-- 管理者功能區 -->
+      <!-- 開發者功能區 -->
       <div id="admin-panel" class="admin-edit-panel" style="display: none;">
         <div class="admin-panel-title">⚙️ 管理者功能：新增項目至此區</div>
         <div class="admin-input-group">
@@ -1107,7 +1110,7 @@
         { name: "ETCO2：要接上", qty: "1", unit: "組", checked: false },
         { name: "導極貼片", qty: "1", unit: "包", checked: false }
       ],
-      "左側2-血糖包": [
+      "left側2-血糖包": [
         { name: "血糖機", qty: "1", unit: "台", checked: false },
         { name: "試紙", qty: "5up", unit: "片", checked: false },
         { name: "酒棉", qty: "4", unit: "片", checked: false },
